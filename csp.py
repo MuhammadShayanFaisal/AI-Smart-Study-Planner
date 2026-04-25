@@ -1,14 +1,5 @@
-"""
-CSP Module - Constraint Satisfaction Problem
-Handles hard constraints for the study schedule.
-"""
-
 import random
 from copy import deepcopy
-
-
-# ─── Hard Constraint Definitions ────────────────────────────────────────────
-
 def check_no_overlap(schedule):
     """Each slot must appear at most once."""
     slots = [entry[0] for entry in schedule]

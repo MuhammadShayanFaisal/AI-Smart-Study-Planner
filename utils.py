@@ -1,12 +1,7 @@
-"""
-Utils Module - Helper functions for display and data formatting.
-"""
-
 from collections import Counter
 
 
 def format_schedule_text(schedule):
-    """Return a formatted string of the schedule."""
     lines = ["─" * 30, f"{'Time':<12} {'Subject'}", "─" * 30]
     for slot, subject in schedule:
         icon = "☕" if subject == "Break" else "📖"

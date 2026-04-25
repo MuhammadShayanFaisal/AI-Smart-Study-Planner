@@ -1,8 +1,3 @@
-"""
-Genetic Algorithm Module - Final version
-Strictly enforces subject hours through sequence balancing.
-"""
-
 import random
 from copy import deepcopy
 from collections import Counter
@@ -14,12 +9,10 @@ def generate_time_slots(start_hour=8, total_slots=12):
 
 
 def balance_sequence(seq, subjects_data):
-    """Fix subject counts to match allocated hours exactly."""
     target = {s["name"]: s["hours"] for s in subjects_data}
-    seq = [s for s in seq if s != "Break"]  # strip breaks first
+    seq = [s for s in seq if s != "Break"]
     current = Counter(seq)
 
-    # Replace excess subjects with deficient ones
     for i in range(len(seq)):
         sub = seq[i]
         if current.get(sub, 0) > target.get(sub, 0):

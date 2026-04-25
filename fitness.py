@@ -1,9 +1,3 @@
-"""
-Fitness Module - Soft Constraint Scoring
-Evaluates how optimal a schedule is beyond just being valid.
-"""
-
-
 def calculate_fitness(schedule, subjects_data, preferred_times):
     """
     Compute fitness score based on soft constraints.
