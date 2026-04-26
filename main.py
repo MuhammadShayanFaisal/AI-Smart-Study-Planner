@@ -32,6 +32,7 @@ SUBJECT_COLORS = [
     "#F78C6C","#C792EA","#89DDFF","#FF5370"
 ]
 FONT_NAME = "Arial"
+
 class StudyPlannerApp:
     def __init__(self, root):
         self.root = root
