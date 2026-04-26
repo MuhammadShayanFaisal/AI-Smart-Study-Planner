@@ -83,7 +83,7 @@ The system provides two visual outputs:
 
 ---
 
-## 👥 Target Users
+## Target Users
 
 | User | Benefit |
 |---|---|
