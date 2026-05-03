@@ -1,13 +1,11 @@
 import random
 from copy import deepcopy
 def check_no_overlap(schedule):
-    """Each slot must appear at most once."""
     slots = [entry[0] for entry in schedule]
     return len(slots) == len(set(slots))
 
 
 def check_break_frequency(schedule, max_continuous=2):
-    """Break must appear after every max_continuous study blocks."""
     continuous = 0
     for _, subject in schedule:
         if subject == "Break":
@@ -91,9 +89,7 @@ def is_valid(schedule, subject_hours, subjects):
     )
 
 
-# ─── Repair Function ─────────────────────────────────────────────────────────
-
-def repair(schedule, subject_hours, subjects, time_slots, break_interval=2):
+def repair(schedule, subject_hours, subjects, time_slots, break_interval=3):
     """
     Repair-based CSP: fix violations instead of discarding the schedule.
     Steps:

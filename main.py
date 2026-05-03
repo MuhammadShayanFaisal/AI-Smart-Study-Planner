@@ -1,4 +1,4 @@
-import sys
+import sys                                                        
 import os
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -416,7 +416,7 @@ class StudyPlannerApp:
         for sp in ["bottom", "left"]: ax1.spines[sp].set_color(BORDER)
         ax1.grid(axis="y", color=BORDER, linestyle="--", alpha=0.4)
         if sum(sched) > 0:
-            ax2.pie(sched, labels=names, colors=colors, autopct="%1.0f%%",
+            ax2.pie(sched, labels=names, colors=colors, autopct="%1.1f%%",
                     textprops={"color": TEXT, "fontsize": 9, "fontfamily": FONT_NAME},
                     wedgeprops={"edgecolor": PANEL, "linewidth": 1.5})
         ax2.set_facecolor(BG)
@@ -553,19 +553,18 @@ def mk_btn(parent, text, cmd, color):
                       relief="flat", font=(FONT_NAME, 10, "bold"),
                       cursor="hand2", pady=6, bd=0)
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = StudyPlannerApp(root)
-    demo = [
-        {"name": "AI",       "hours": 2, "priority": 3, "difficulty": 5, "preferred": "Morning"},
-        {"name": "OS",       "hours": 2, "priority": 2, "difficulty": 3, "preferred": "Morning"},
-        {"name": "Database", "hours": 2, "priority": 2, "difficulty": 4, "preferred": "Evening"},
-        {"name": "Networks", "hours": 1, "priority": 1, "difficulty": 2, "preferred": "Evening"},
-        {"name": "Math",     "hours": 1, "priority": 3, "difficulty": 4, "preferred": "Morning"},
-    ]
-    for s in demo:
-        app.subjects_data.append(s)
-        app.subject_listbox.insert("end", f"  {s['name']}  [{s['hours']}h | Med | D:{s['difficulty']} | {s['preferred']}]")
-    app._update_count()
-    app.status_var.set("5 demo subjects loaded — click GENERATE!")
-    root.mainloop()
+root = tk.Tk()
+app = StudyPlannerApp(root)
+demo = [
+    {"name": "AI",       "hours": 2, "priority": 3, "difficulty": 5, "preferred": "Morning"},
+    {"name": "OS",       "hours": 2, "priority": 2, "difficulty": 3, "preferred": "Morning"},
+    {"name": "Database", "hours": 2, "priority": 2, "difficulty": 4, "preferred": "Evening"},
+    {"name": "Networks", "hours": 1, "priority": 1, "difficulty": 2, "preferred": "Evening"},
+    {"name": "Math",     "hours": 1, "priority": 3, "difficulty": 4, "preferred": "Morning"},
+]
+for s in demo:
+    app.subjects_data.append(s)
+    app.subject_listbox.insert("end", f"  {s['name']}  [{s['hours']}h | Med | D:{s['difficulty']} | {s['preferred']}]")
+app._update_count()
+app.status_var.set("5 demo subjects loaded — click GENERATE!")
+root.mainloop()

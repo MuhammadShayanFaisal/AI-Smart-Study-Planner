@@ -1,6 +1,5 @@
 from collections import Counter
 
-
 def format_schedule_text(schedule):
     lines = ["─" * 30, f"{'Time':<12} {'Subject'}", "─" * 30]
     for slot, subject in schedule:
@@ -9,14 +8,11 @@ def format_schedule_text(schedule):
     lines.append("─" * 30)
     return "\n".join(lines)
 
-
 def schedule_to_dict_list(schedule):
-    """Convert schedule tuples to list of dicts for table display."""
     rows = []
     for slot, subject in schedule:
         rows.append({"Time": slot, "Subject": subject})
     return rows
-
 
 def get_subject_summary(schedule, subjects_data):
     """Return per-subject hour count vs allocated."""
