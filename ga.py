@@ -31,10 +31,7 @@ def evening_slots():
 
 
 def build_ordered_slots(subjects_data, preferred_times, break_interval):
-    """
-    Build ordered slot list.
-    Start at 16:00 ONLY if ALL subjects prefer Evening, otherwise always 08:00.
-    """
+   
     total_study  = sum(s["hours"] for s in subjects_data)
     n_breaks     = total_study // break_interval
     total_needed = min(total_study + n_breaks, MAX_DAY_SLOTS)
@@ -49,13 +46,11 @@ def build_ordered_slots(subjects_data, preferred_times, break_interval):
 
 
 def get_overflow_subjects(subjects_data, break_interval):
-    """Return subjects that cannot fit in the day (capped at midnight)."""
     total_study  = sum(s["hours"] for s in subjects_data)
     n_breaks     = total_study // break_interval
     if total_study + n_breaks <= MAX_DAY_SLOTS:
         return []
 
-    # Available study slots after accounting for breaks
     avail_study = (MAX_DAY_SLOTS * break_interval) // (break_interval + 1)
 
     sorted_subs = sorted(subjects_data, key=lambda s: s.get("priority", 1), reverse=True)
@@ -72,10 +67,8 @@ def get_overflow_subjects(subjects_data, break_interval):
     return overflow
 
 
-# ── Sequence helpers ──────────────────────────────────────────────────────────
 
 def balance_sequence(seq, subjects_data):
-    """Force subject counts to exactly match allocated hours."""
     target  = {s["name"]: s["hours"] for s in subjects_data}
     seq     = [s for s in seq if s != "Break"]
     current = Counter(seq)
@@ -90,7 +83,6 @@ def balance_sequence(seq, subjects_data):
                     seq[i]          = need_sub
                     break
 
-    # Final pass: honour target exactly
     result    = []
     remaining = dict(target)
     for sub in seq:
@@ -104,7 +96,6 @@ def balance_sequence(seq, subjects_data):
 
 
 def fix_consecutive(seq):
-    """Swap adjacent duplicates with a later different element."""
     seq = list(seq)
     for i in range(1, len(seq)):
         if seq[i] == seq[i - 1]:
@@ -116,7 +107,6 @@ def fix_consecutive(seq):
 
 
 def inject_breaks(seq, break_interval):
-    """Insert 'Break' every break_interval study slots."""
     result, count = [], 0
     for sub in seq:
         result.append(sub)
@@ -128,20 +118,13 @@ def inject_breaks(seq, break_interval):
 
 
 def assign_slots(subject_seq, ordered_slots):
-    """
-    Pair subjects (with breaks already injected) to the ordered slot list.
-    Truncates or pads to fit exactly len(ordered_slots).
-    """
     n = len(ordered_slots)
-    # Trim if too long
     subj = subject_seq[:n]
-    # Pad with Break if too short
     while len(subj) < n:
         subj.append("Break")
     return list(zip(ordered_slots, subj))
 
 
-# ── Schedule factory ─────────────────────────────────────────────────────────
 
 def make_schedule(subjects_data, preferred_times, break_interval):
     pool = []
@@ -154,7 +137,6 @@ def make_schedule(subjects_data, preferred_times, break_interval):
     return assign_slots(seq, slots)
 
 
-# ── GA operators ─────────────────────────────────────────────────────────────
 
 def initialize_population(size, subjects_data, preferred_times, break_interval):
     return [make_schedule(subjects_data, preferred_times, break_interval)
@@ -199,7 +181,6 @@ def mutate(schedule, mutation_rate, subjects_data, preferred_times, break_interv
     return assign_slots(seq, slots)
 
 
-# ── Main GA loop ──────────────────────────────────────────────────────────────
 
 def run_ga(
     subjects_data,
@@ -211,21 +192,11 @@ def run_ga(
     base_mutation_rate=0.1,
     progress_callback=None,
 ):
-    """
-    Returns (best_schedule, best_fitness, fitness_history).
-
-    Schedule guaranteed:
-      - Starts at 08:00, ends no later than 24:00
-      - Morning subjects scheduled 08–16, Evening 16–24
-      - Breaks every break_interval study hours
-      - High-priority subjects appear first
-    """
-    # Warn if user asked for more hours than the day allows
+    
     total_study = sum(s["hours"] for s in subjects_data)
     n_breaks    = total_study // break_interval
     total_slots_needed = total_study + n_breaks
     if total_slots_needed > MAX_DAY_SLOTS:
-        # Silently cap — the assign_slots function handles truncation
         pass
 
     population = initialize_population(
@@ -255,7 +226,6 @@ def run_ga(
         else:
             stagnation += 1
 
-        # Adaptive mutation
         if stagnation >= 5:
             mutation_rate = min(0.5, mutation_rate + 0.05)
         else:
@@ -264,7 +234,6 @@ def run_ga(
         if progress_callback:
             progress_callback(gen + 1, gen_best_fitness)
 
-        # Next generation with elitism (keep top 2)
         sorted_idx     = sorted(range(len(population)),
                                 key=lambda i: fitness_scores[i], reverse=True)
         new_population = [deepcopy(population[i]) for i in sorted_idx[:2]]
@@ -279,7 +248,6 @@ def run_ga(
 
         population = new_population
 
-    # Post-process: sort study blocks so High > Med > Low priority
     best_schedule = sort_schedule_by_priority(best_schedule, subjects_data)
     best_fitness  = calculate_fitness(best_schedule, subjects_data, preferred_times)
 

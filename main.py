@@ -1,11 +1,3 @@
-"""
-AI Smart Study Planner
-======================
-GA (Genetic Algorithm) + CSP (Constraint Satisfaction Problem)
-
-UI built with Tkinter. Visualization with Matplotlib.
-"""
-
 import sys
 import os
 import tkinter as tk
@@ -13,7 +5,6 @@ from tkinter import ttk, messagebox
 import threading
 
 sys.path.insert(0, os.path.dirname(__file__))
-
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -25,7 +16,6 @@ from ga import run_ga
 from csp import get_violations
 from utils import format_schedule_text, get_subject_summary, priority_label
 
-# ─── Colors ──────────────────────────────────────────────────────────────────
 BG      = "#0F0F1A"
 PANEL   = "#161628"
 CARD    = "#1E1E38"
@@ -43,7 +33,6 @@ SUBJECT_COLORS = [
 ]
 Font_Name = 'Arial'
 
-# ─── App ─────────────────────────────────────────────────────────────────────
 class StudyPlannerApp:
     def __init__(self, root):
         self.root = root
@@ -59,22 +48,14 @@ class StudyPlannerApp:
         self._build_header()
         self._build_body()
 
-    # ── Header ────────────────────────────────────────────────────────────────
     def _build_header(self):
         hdr = tk.Frame(self.root, bg=PANEL, pady=10)
         hdr.pack(fill="x")
-        tk.Label(hdr, text="  AI Smart Study Planner",
-                 font=(Font_Name, 20, "bold"), bg=PANEL, fg=ACCENT
-                 ).pack(side="left", padx=18)
-        tk.Label(hdr, text="Genetic Algorithm  x  Constraint Satisfaction",
-                 font=(Font_Name, 9), bg=PANEL, fg=SUBTEXT
-                 ).pack(side="left")
+        tk.Label(hdr, text="  AI Smart Study Planner",font=(Font_Name, 20, "bold"), bg=PANEL, fg=ACCENT).pack(side="left", padx=18)
+        tk.Label(hdr, text="Genetic Algorithm  x  Constraint Satisfaction",font=(Font_Name, 9), bg=PANEL, fg=SUBTEXT).pack(side="left")
         self.status_var = tk.StringVar(value="Ready — add subjects then click Generate")
         tk.Label(hdr, textvariable=self.status_var,
-                 font=(Font_Name, 9, "bold"), bg=PANEL, fg=GREEN
-                 ).pack(side="right", padx=20)
-
-    # ── Body ──────────────────────────────────────────────────────────────────
+                 font=(Font_Name, 9, "bold"), bg=PANEL, fg=GREEN).pack(side="right", padx=20)
     def _build_body(self):
         body = tk.Frame(self.root, bg=BG)
         body.pack(fill="both", expand=True)
@@ -82,18 +63,13 @@ class StudyPlannerApp:
         sidebar = tk.Frame(body, bg=PANEL, width=340)
         sidebar.pack(side="left", fill="y", padx=(8, 6), pady=8)
         sidebar.pack_propagate(False)
-
-        scroll_canvas = tk.Canvas(sidebar, bg=PANEL, bd=0,
-                                  highlightthickness=0, width=320)
-        vsb = tk.Scrollbar(sidebar, orient="vertical",
-                           command=scroll_canvas.yview)
+        scroll_canvas = tk.Canvas(sidebar, bg=PANEL, bd=0,highlightthickness=0, width=320)
+        vsb = tk.Scrollbar(sidebar, orient="vertical", command=scroll_canvas.yview)
         scroll_canvas.configure(yscrollcommand=vsb.set)
         vsb.pack(side="right", fill="y")
         scroll_canvas.pack(side="top", fill="both", expand=True)
-
         inner = tk.Frame(scroll_canvas, bg=PANEL)
         win_id = scroll_canvas.create_window((0, 0), window=inner, anchor="nw")
-
         def _resize(e):
             scroll_canvas.itemconfig(win_id, width=e.width)
         scroll_canvas.bind("<Configure>", _resize)
@@ -116,12 +92,8 @@ class StudyPlannerApp:
         self.progress_var = tk.DoubleVar()
         pb_style = ttk.Style()
         pb_style.theme_use("default")
-        pb_style.configure("GA.Horizontal.TProgressbar",
-                           troughcolor=CARD, background=GREEN,
-                           thickness=8, borderwidth=0)
-        ttk.Progressbar(pin, variable=self.progress_var, maximum=100,
-                        style="GA.Horizontal.TProgressbar"
-                        ).pack(fill="x", padx=12, pady=(0, 8))
+        pb_style.configure("GA.Horizontal.TProgressbar", troughcolor=CARD, background=GREEN,thickness=8, borderwidth=0)
+        ttk.Progressbar(pin, variable=self.progress_var, maximum=100,style="GA.Horizontal.TProgressbar").pack(fill="x", padx=12, pady=(0, 8))
 
         self.run_btn = tk.Button(
             pin,
@@ -135,17 +107,12 @@ class StudyPlannerApp:
         )
         self.run_btn.pack(fill="x", padx=12, pady=(0, 4))
 
-        self.gen_status = tk.Label(pin, text="Add 2+ subjects to begin",
-                                   bg="#0D0D1A", fg=SUBTEXT,
-                                   font=(Font_Name, 8))
+        self.gen_status = tk.Label(pin, text="Add 2+ subjects to begin",bg="#0D0D1A", fg=SUBTEXT,font=(Font_Name, 8))
         self.gen_status.pack()
-
         right = tk.Frame(body, bg=BG)
-        right.pack(side="left", fill="both", expand=True,
-                   padx=(0, 8), pady=8)
+        right.pack(side="left", fill="both", expand=True,padx=(0, 8), pady=8)
         self._build_output_tabs(right)
 
-    # ── Input Section ─────────────────────────────────────────────────────────
     def _build_input_section(self, parent):
         P = {"bg": PANEL}
 
@@ -175,28 +142,21 @@ class StudyPlannerApp:
             elif kind == "spin":
                 w = mk_spin(form, var, opts[0], opts[1])
             else:
-                w = ttk.Combobox(form, textvariable=var, values=opts,
-                                 width=13, state="readonly", font=(Font_Name, 9))
+                w = ttk.Combobox(form, textvariable=var, values=opts,width=13, state="readonly", font=(Font_Name, 9))
             w.grid(row=i, column=1, sticky="ew", padx=(8, 0), pady=4)
         form.columnconfigure(1, weight=1)
 
-        tk.Label(form, text="Priority", bg=PANEL, fg=SUBTEXT,
-                 font=(Font_Name, 9)).grid(row=4, column=0, sticky="w", pady=4)
+        tk.Label(form, text="Priority", bg=PANEL, fg=SUBTEXT,font=(Font_Name, 9)).grid(row=4, column=0, sticky="w", pady=4)
         self.priority_var = tk.IntVar(value=2)
         pf = tk.Frame(form, **P)
         pf.grid(row=4, column=1, sticky="w", padx=(8, 0))
         for val, lbl, col in [(1,"Low",SUBTEXT),(2,"Med",YELLOW),(3,"High",ACCENT2)]:
-            tk.Radiobutton(pf, text=lbl, variable=self.priority_var, value=val,
-                           bg=PANEL, fg=col, selectcolor=CARD,
-                           activebackground=PANEL, font=(Font_Name, 9)
-                           ).pack(side="left", padx=2)
+            tk.Radiobutton(pf, text=lbl, variable=self.priority_var, value=val,bg=PANEL, fg=col, selectcolor=CARD,activebackground=PANEL, font=(Font_Name, 9)).pack(side="left", padx=2)
 
         btn_row = tk.Frame(parent, **P)
         btn_row.pack(fill="x", padx=14, pady=(6, 2))
-        mk_btn(btn_row, "+ Add Subject", self._add_subject, ACCENT
-               ).pack(side="left", fill="x", expand=True)
-        mk_btn(btn_row, "Clear All", self._clear_subjects, "#3A3A55"
-               ).pack(side="left", fill="x", expand=True, padx=(6, 0))
+        mk_btn(btn_row, "+ Add Subject", self._add_subject, ACCENT).pack(side="left", fill="x", expand=True)
+        mk_btn(btn_row, "Clear All", self._clear_subjects, "#3A3A55").pack(side="left", fill="x", expand=True, padx=(6, 0))
 
         divider(parent)
 
@@ -210,12 +170,10 @@ class StudyPlannerApp:
         )
         self.subject_listbox.pack(fill="x", padx=14)
 
-        self.count_label = tk.Label(parent, text="0 subjects added",
-                                    bg=PANEL, fg=ACCENT2, font=(Font_Name, 8))
+        self.count_label = tk.Label(parent, text="0 subjects added",bg=PANEL, fg=ACCENT2, font=(Font_Name, 8))
         self.count_label.pack(anchor="w", padx=14, pady=(2, 0))
 
-        mk_btn(parent, "Remove Selected", self._remove_subject, "#3A3A55"
-               ).pack(fill="x", padx=14, pady=(4, 2))
+        mk_btn(parent, "Remove Selected", self._remove_subject, "#3A3A55").pack(fill="x", padx=14, pady=(4, 2))
 
         divider(parent)
 
@@ -236,30 +194,20 @@ class StudyPlannerApp:
         ]):
             tk.Label(ga, text=lbl, bg=PANEL, fg=SUBTEXT,
                      font=(Font_Name, 9)).grid(row=i, column=0, sticky="w", pady=3)
-            mk_spin(ga, var, lo, hi).grid(row=i, column=1, sticky="ew",
-                                          padx=(8, 0), pady=3)
+            mk_spin(ga, var, lo, hi).grid(row=i, column=1, sticky="ew",padx=(8, 0), pady=3)
 
-        tk.Label(ga, text="Mutation Rate", bg=PANEL, fg=SUBTEXT,
-                 font=(Font_Name, 9)).grid(row=3, column=0, sticky="w", pady=3)
-        tk.Scale(ga, variable=self.mut_var, from_=0.01, to=0.5,
-                 orient="horizontal", resolution=0.01,
-                 bg=PANEL, fg=TEXT, troughcolor=CARD,
-                 highlightthickness=0, font=(Font_Name, 8)
-                 ).grid(row=3, column=1, sticky="ew", padx=(8, 0))
+        tk.Label(ga, text="Mutation Rate", bg=PANEL, fg=SUBTEXT,font=(Font_Name, 9)).grid(row=3, column=0, sticky="w", pady=3)
+        tk.Scale(ga, variable=self.mut_var, from_=0.01, to=0.5,orient="horizontal", resolution=0.01,bg=PANEL, fg=TEXT, troughcolor=CARD,highlightthickness=0, font=(Font_Name, 8)).grid(row=3, column=1, sticky="ew", padx=(8, 0))
         ga.columnconfigure(1, weight=1)
 
         tk.Frame(parent, bg=PANEL, height=30).pack()
 
-    # ── Output Tabs ───────────────────────────────────────────────────────────
     def _build_output_tabs(self, parent):
         nb_style = ttk.Style()
         nb_style.theme_use("default")
         nb_style.configure("TNotebook", background=BG, borderwidth=0)
-        nb_style.configure("TNotebook.Tab", background=CARD, foreground=SUBTEXT,
-                           padding=[16, 7], font=(Font_Name, 10))
-        nb_style.map("TNotebook.Tab",
-                     background=[("selected", PANEL)],
-                     foreground=[("selected", ACCENT)])
+        nb_style.configure("TNotebook.Tab", background=CARD, foreground=SUBTEXT,padding=[16, 7], font=(Font_Name, 10))
+        nb_style.map("TNotebook.Tab",background=[("selected", PANEL)],foreground=[("selected", ACCENT)])
 
         nb = ttk.Notebook(parent)
         nb.pack(fill="both", expand=True)
@@ -280,15 +228,12 @@ class StudyPlannerApp:
         nb.add(self.tab_sum, text="  Summary  ")
         self._build_summary_tab(self.tab_sum)
 
-    # ── Schedule Tab ──────────────────────────────────────────────────────────
     def _build_schedule_tab(self, parent):
         top = tk.Frame(parent, bg=PANEL)
         top.pack(fill="x", padx=16, pady=(12, 4))
         tk.Label(top, text="Optimized Schedule", bg=PANEL, fg=TEXT,
                  font=(Font_Name, 13, "bold")).pack(side="left")
-        self.fitness_label = tk.Label(top, text="Fitness: —",
-                                      bg=PANEL, fg=GREEN,
-                                      font=(Font_Name, 11, "bold"))
+        self.fitness_label = tk.Label(top, text="Fitness: —",bg=PANEL, fg=GREEN,font=(Font_Name, 11, "bold"))
         self.fitness_label.pack(side="right")
 
         self.fig_s, self.ax_s = plt.subplots(figsize=(9, 5))
@@ -296,7 +241,6 @@ class StudyPlannerApp:
         self.canvas_s = FigureCanvasTkAgg(self.fig_s, master=parent)
         self.canvas_s.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=6)
 
-        # ── Overflow label — Tkinter widget, always updated, never stale ──
         self.overflow_label = tk.Label(
             parent, text="",
             bg=PANEL, fg=YELLOW,
@@ -306,8 +250,7 @@ class StudyPlannerApp:
         )
         self.overflow_label.pack(fill="x", padx=10, pady=(0, 4))
 
-        self._placeholder(self.ax_s, self.canvas_s,
-                          "Run GA to see your optimized schedule here")
+        self._placeholder(self.ax_s, self.canvas_s,"Run GA to see your optimized schedule here")
 
     def _draw_schedule(self, schedule, overflow=None):
         ax = self.ax_s
@@ -332,15 +275,12 @@ class StudyPlannerApp:
         ax.set_xlim(0, 1.02)
         ax.set_ylim(-0.6, n - 0.3)
         ax.axis("off")
-        ax.set_title("Optimized Study Timetable", color=TEXT,
-                     fontfamily=Font_Name, fontsize=12, pad=10)
+        ax.set_title("Optimized Study Timetable", color=TEXT,fontfamily=Font_Name, fontsize=12, pad=10)
 
         patches = [mpatches.Patch(color=c, label=s) for s, c in cmap.items()]
-        ax.legend(handles=patches, fontsize=8, loc="lower right",
-                  facecolor=CARD, edgecolor=BORDER, labelcolor=TEXT)
+        ax.legend(handles=patches, fontsize=8, loc="lower right",facecolor=CARD, edgecolor=BORDER, labelcolor=TEXT)
         self.canvas_s.draw()
 
-        # ── Always reset overflow label first, then set if needed ──
         if overflow:
             msg = "Day full (ends 24:00). Continue next day:  " + \
                   "  |  ".join(overflow)
@@ -348,14 +288,12 @@ class StudyPlannerApp:
         else:
             self.overflow_label.config(text="", bg=PANEL)
 
-    # ── Fitness Graph Tab ─────────────────────────────────────────────────────
     def _build_graph_tab(self, parent):
         self.fig_g, self.ax_g = plt.subplots(figsize=(9, 5))
         self.fig_g.patch.set_facecolor(PANEL)
         self.canvas_g = FigureCanvasTkAgg(self.fig_g, master=parent)
         self.canvas_g.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
-        self._placeholder(self.ax_g, self.canvas_g,
-                          "Fitness history will appear after running GA")
+        self._placeholder(self.ax_g, self.canvas_g,"Fitness history will appear after running GA")
 
     def _draw_fitness(self, history):
         ax = self.ax_g; ax.clear()
@@ -379,7 +317,6 @@ class StudyPlannerApp:
         ax.grid(axis="y", color=BORDER, linestyle="--", alpha=0.5)
         self.canvas_g.draw()
 
-    # ── CSP Tab ───────────────────────────────────────────────────────────────
     def _build_csp_tab(self, parent):
         self.fig_c, self.ax_c = plt.subplots(figsize=(9, 5))
         self.fig_c.patch.set_facecolor(PANEL)
@@ -424,7 +361,6 @@ class StudyPlannerApp:
                   facecolor=CARD, edgecolor=BORDER, labelcolor=TEXT)
         self.canvas_c.draw()
 
-    # ── Summary Tab ───────────────────────────────────────────────────────────
     def _build_summary_tab(self, parent):
         self.fig_sum, self.axes_sum = plt.subplots(1, 2, figsize=(9, 5))
         self.fig_sum.patch.set_facecolor(PANEL)
@@ -469,7 +405,6 @@ class StudyPlannerApp:
         self.fig_sum.tight_layout(pad=2)
         self.canvas_sum.draw()
 
-    # ── Helpers ───────────────────────────────────────────────────────────────
     def _placeholder(self, ax, canvas, msg):
         ax.clear(); ax.set_facecolor(BG)
         ax.text(0.5, 0.5, msg, ha="center", va="center",
@@ -479,7 +414,6 @@ class StudyPlannerApp:
         if canvas:
             canvas.draw()
 
-    # ── Subject management ────────────────────────────────────────────────────
     def _add_subject(self):
         name = self.name_var.get().strip()
         if not name:
@@ -533,7 +467,6 @@ class StudyPlannerApp:
             fg=GREEN if n >= 2 else SUBTEXT
         )
 
-    # ── GA Runner ─────────────────────────────────────────────────────────────
     def _run_ga(self):
         if len(self.subjects_data) < 2:
             messagebox.showwarning(
@@ -596,7 +529,6 @@ class StudyPlannerApp:
         self._draw_summary(schedule, self.subjects_data)
 
 
-# ─── Widget helpers ───────────────────────────────────────────────────────────
 
 def section_title(parent, text):
     tk.Label(parent, text=text, bg=PANEL, fg=ACCENT,
@@ -622,7 +554,6 @@ def mk_btn(parent, text, cmd, color):
                      cursor="hand2", pady=6, bd=0)
 
 
-# ─── Entry Point ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     root = tk.Tk()
     app = StudyPlannerApp(root)
