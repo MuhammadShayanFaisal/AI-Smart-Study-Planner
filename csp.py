@@ -1,11 +1,22 @@
+"""
+CSP Module - Constraint Satisfaction Problem
+Handles hard constraints for the study schedule.
+"""
+
 import random
 from copy import deepcopy
+
+
+# ─── Hard Constraint Definitions ────────────────────────────────────────────
+
 def check_no_overlap(schedule):
+    """Each slot must appear at most once."""
     slots = [entry[0] for entry in schedule]
     return len(slots) == len(set(slots))
 
 
 def check_break_frequency(schedule, max_continuous=2):
+    """Break must appear after every max_continuous study blocks."""
     continuous = 0
     for _, subject in schedule:
         if subject == "Break":
@@ -56,24 +67,24 @@ def get_violations(schedule, subject_hours, subjects):
     violations = []
 
     if not check_no_overlap(schedule):
-        violations.append("❌ Overlapping time slots detected")
+        violations.append("[X] Overlapping time slots detected")
 
     if not check_no_consecutive_same(schedule):
         pairs = []
         for i in range(1, len(schedule)):
             if schedule[i][1] == schedule[i-1][1] and schedule[i][1] != "Break":
                 pairs.append(schedule[i][1])
-        violations.append(f"❌ Consecutive same subject: {', '.join(set(pairs))}")
+        violations.append(f"[X] Consecutive same subject: {', '.join(set(pairs))}")
 
     if not check_break_frequency(schedule):
-        violations.append("❌ Missing break after 2+ continuous study hours")
+        violations.append("[X] Missing break after 2+ continuous study hours")
 
     if not check_subject_hours(schedule, subject_hours):
-        violations.append("❌ Subject hour limits exceeded")
+        violations.append("[X] Subject hour limits exceeded")
 
     if not check_all_subjects_present(schedule, subjects):
         missing = [s for s in subjects if s not in {sub for _, sub in schedule}]
-        violations.append(f"❌ Subjects missing from schedule: {', '.join(missing)}")
+        violations.append(f"[X] Subjects missing from schedule: {', '.join(missing)}")
 
     return violations
 
@@ -89,7 +100,9 @@ def is_valid(schedule, subject_hours, subjects):
     )
 
 
-def repair(schedule, subject_hours, subjects, time_slots, break_interval=3):
+# ─── Repair Function ─────────────────────────────────────────────────────────
+
+def repair(schedule, subject_hours, subjects, time_slots, break_interval=2):
     """
     Repair-based CSP: fix violations instead of discarding the schedule.
     Steps:

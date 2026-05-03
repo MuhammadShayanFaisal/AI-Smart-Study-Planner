@@ -1,10 +1,7 @@
 """
-Genetic Algorithm Module
-========================
-Key time rules:
   - Day runs 08:00 → 24:00 (midnight), max 16 usable hours
-  - Morning window : 08:00 – 16:00  (slots 8-9 … 15-16)
-  - Evening window : 16:00 – 24:00  (slots 16-17 … 23-24)
+  - Morning window : 08:00 16:00  (slots 8-9 … 15-16)
+  - Evening window : 16:00 4:00  (slots 16-17 … 23-24)
   - If all subjects prefer Morning, morning slots fill first (8→16),
     overflow goes into evening.  Same logic applies in reverse.
   - Schedule NEVER goes past 24:00.
@@ -15,18 +12,13 @@ from copy import deepcopy
 from collections import Counter
 from fitness import calculate_fitness, sort_schedule_by_priority
 
-# ── Hard time constants ───────────────────────────────────────────────────────
-DAY_START      = 8    # 08:00
-DAY_END        = 24   # 24:00 (midnight)
-MAX_DAY_SLOTS  = DAY_END - DAY_START   # 16 usable slots in a day
-MORNING_END    = 16   # morning  = 08:00–16:00
-EVENING_START  = 16   # evening  = 16:00–24:00
-
-
-# ── Slot helpers ─────────────────────────────────────────────────────────────
+DAY_START      = 8  
+DAY_END        = 24  
+MAX_DAY_SLOTS  = DAY_END - DAY_START  
+MORNING_END    = 16   
+EVENING_START  = 16  
 
 def all_day_slots():
-    """Return all 16 slot labels for the full day 08:00–24:00."""
     return [f"{h}-{h+1}" for h in range(DAY_START, DAY_END)]
 
 
@@ -39,27 +31,45 @@ def evening_slots():
 
 
 def build_ordered_slots(subjects_data, preferred_times, break_interval):
-    # Total slots needed (study + breaks)
-    total_study = sum(s["hours"] for s in subjects_data)
-    n_breaks    = total_study // break_interval
-    total_needed = total_study + n_breaks
+    """
+    Build ordered slot list.
+    Start at 16:00 ONLY if ALL subjects prefer Evening, otherwise always 08:00.
+    """
+    total_study  = sum(s["hours"] for s in subjects_data)
+    n_breaks     = total_study // break_interval
+    total_needed = min(total_study + n_breaks, MAX_DAY_SLOTS)
 
-    # Cap at max day slots
-    total_needed = min(total_needed, MAX_DAY_SLOTS)
+    all_evening = all(
+        preferred_times.get(s["name"], "Morning") == "Evening"
+        for s in subjects_data
+    )
 
-    # Count morning vs evening preference by study-hour weight
-    morning_hrs = sum(s["hours"] for s in subjects_data
-                      if preferred_times.get(s["name"], "Morning") == "Morning")
-    evening_hrs = sum(s["hours"] for s in subjects_data
-                      if preferred_times.get(s["name"], "Evening") == "Evening")
-
-    # Build slot pool: morning-first or evening-first
-    if morning_hrs >= evening_hrs:
-        slot_pool = morning_slots() + evening_slots()   # 08 → 24
-    else:
-        slot_pool = evening_slots() + morning_slots()   # 16 → 24, then 08 → 16
-
+    slot_pool = evening_slots() + morning_slots() if all_evening else morning_slots() + evening_slots()
     return slot_pool[:total_needed]
+
+
+def get_overflow_subjects(subjects_data, break_interval):
+    """Return subjects that cannot fit in the day (capped at midnight)."""
+    total_study  = sum(s["hours"] for s in subjects_data)
+    n_breaks     = total_study // break_interval
+    if total_study + n_breaks <= MAX_DAY_SLOTS:
+        return []
+
+    # Available study slots after accounting for breaks
+    avail_study = (MAX_DAY_SLOTS * break_interval) // (break_interval + 1)
+
+    sorted_subs = sorted(subjects_data, key=lambda s: s.get("priority", 1), reverse=True)
+    used = 0
+    overflow = []
+    for s in sorted_subs:
+        if used + s["hours"] <= avail_study:
+            used += s["hours"]
+        else:
+            cut = s["hours"] - max(0, avail_study - used)
+            used = avail_study
+            if cut > 0:
+                overflow.append(f"{s['name']} ({cut}h → continue next day)")
+    return overflow
 
 
 # ── Sequence helpers ──────────────────────────────────────────────────────────
@@ -273,4 +283,5 @@ def run_ga(
     best_schedule = sort_schedule_by_priority(best_schedule, subjects_data)
     best_fitness  = calculate_fitness(best_schedule, subjects_data, preferred_times)
 
-    return best_schedule, best_fitness, fitness_history
+    overflow = get_overflow_subjects(subjects_data, break_interval)
+    return best_schedule, best_fitness, fitness_history, overflow

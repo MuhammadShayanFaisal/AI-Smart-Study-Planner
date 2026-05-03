@@ -1,10 +1,18 @@
-import sys                                                        
+"""
+AI Smart Study Planner
+======================
+GA (Genetic Algorithm) + CSP (Constraint Satisfaction Problem)
+
+UI built with Tkinter. Visualization with Matplotlib.
+"""
+
+import sys
 import os
 import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 
-sys.path.insert(0, os.path.dirname(__file__))                        
+sys.path.insert(0, os.path.dirname(__file__))
 
 import matplotlib
 matplotlib.use("TkAgg")
@@ -16,6 +24,8 @@ import numpy as np
 from ga import run_ga
 from csp import get_violations
 from utils import format_schedule_text, get_subject_summary, priority_label
+
+# ─── Colors ──────────────────────────────────────────────────────────────────
 BG      = "#0F0F1A"
 PANEL   = "#161628"
 CARD    = "#1E1E38"
@@ -31,8 +41,9 @@ SUBJECT_COLORS = [
     "#6C63FF","#FF6B6B","#43D9AD","#FFD166",
     "#F78C6C","#C792EA","#89DDFF","#FF5370"
 ]
-FONT_NAME = "Arial"
+Font_Name = 'Arial'
 
+# ─── App ─────────────────────────────────────────────────────────────────────
 class StudyPlannerApp:
     def __init__(self, root):
         self.root = root
@@ -48,20 +59,22 @@ class StudyPlannerApp:
         self._build_header()
         self._build_body()
 
+    # ── Header ────────────────────────────────────────────────────────────────
     def _build_header(self):
         hdr = tk.Frame(self.root, bg=PANEL, pady=10)
         hdr.pack(fill="x")
         tk.Label(hdr, text="  AI Smart Study Planner",
-                 font=(FONT_NAME, 20, "bold"), bg=PANEL, fg=ACCENT
+                 font=(Font_Name, 20, "bold"), bg=PANEL, fg=ACCENT
                  ).pack(side="left", padx=18)
         tk.Label(hdr, text="Genetic Algorithm  x  Constraint Satisfaction",
-                 font=(FONT_NAME, 10), bg=PANEL, fg=SUBTEXT
+                 font=(Font_Name, 9), bg=PANEL, fg=SUBTEXT
                  ).pack(side="left")
         self.status_var = tk.StringVar(value="Ready — add subjects then click Generate")
         tk.Label(hdr, textvariable=self.status_var,
-                 font=(FONT_NAME, 10, "bold"), bg=PANEL, fg=GREEN
+                 font=(Font_Name, 9, "bold"), bg=PANEL, fg=GREEN
                  ).pack(side="right", padx=20)
 
+    # ── Body ──────────────────────────────────────────────────────────────────
     def _build_body(self):
         body = tk.Frame(self.root, bg=BG)
         body.pack(fill="both", expand=True)
@@ -73,7 +86,7 @@ class StudyPlannerApp:
         scroll_canvas = tk.Canvas(sidebar, bg=PANEL, bd=0,
                                   highlightthickness=0, width=320)
         vsb = tk.Scrollbar(sidebar, orient="vertical",
-                            command=scroll_canvas.yview)
+                           command=scroll_canvas.yview)
         scroll_canvas.configure(yscrollcommand=vsb.set)
         vsb.pack(side="right", fill="y")
         scroll_canvas.pack(side="top", fill="both", expand=True)
@@ -116,7 +129,7 @@ class StudyPlannerApp:
             command=self._run_ga,
             bg=GREEN, fg="#0A0A0A",
             activebackground="#2fbf8a", activeforeground="#0A0A0A",
-            font=(FONT_NAME, 13, "bold"),
+            font=(Font_Name, 14, "bold"),
             relief="flat", cursor="hand2",
             pady=14, bd=0
         )
@@ -124,58 +137,58 @@ class StudyPlannerApp:
 
         self.gen_status = tk.Label(pin, text="Add 2+ subjects to begin",
                                    bg="#0D0D1A", fg=SUBTEXT,
-                                   font=(FONT_NAME, 9))
+                                   font=(Font_Name, 8))
         self.gen_status.pack()
 
         right = tk.Frame(body, bg=BG)
         right.pack(side="left", fill="both", expand=True,
-                    padx=(0, 8), pady=8)
+                   padx=(0, 8), pady=8)
         self._build_output_tabs(right)
 
+    # ── Input Section ─────────────────────────────────────────────────────────
     def _build_input_section(self, parent):
         P = {"bg": PANEL}
+
         section_title(parent, "ADD SUBJECT")
 
         form = tk.Frame(parent, **P)
         form.pack(fill="x", padx=14, pady=(4, 2))
 
         rows = [
-            ("Subject Name",    "entry",   None),
-            ("Study Hours",     "spin",    (1, 8)),
-            ("Difficulty 1-5",  "spin",    (1, 5)),
-            ("Preferred Time",  "combo",   ["Morning", "Evening"]),
+            ("Subject Name",   "entry", None),
+            ("Study Hours",    "spin",  (1, 8)),
+            ("Difficulty 1-5", "spin",  (1, 5)),
+            ("Preferred Time", "combo", ["Morning", "Evening"]),
         ]
-        self.name_var     = tk.StringVar()
-        self.hours_var    = tk.IntVar(value=2)
-        self.diff_var     = tk.IntVar(value=3)
-        self.pref_var     = tk.StringVar(value="Morning")
-
+        self.name_var  = tk.StringVar()
+        self.hours_var = tk.IntVar(value=2)
+        self.diff_var  = tk.IntVar(value=3)
+        self.pref_var  = tk.StringVar(value="Morning")
         vars_map = [self.name_var, self.hours_var, self.diff_var, self.pref_var]
 
         for i, (label, kind, opts) in enumerate(rows):
             tk.Label(form, text=label, bg=PANEL, fg=SUBTEXT,
-                     font=(FONT_NAME, 10)).grid(row=i, column=0, sticky="w", pady=4)
+                     font=(Font_Name, 9)).grid(row=i, column=0, sticky="w", pady=4)
             var = vars_map[i]
             if kind == "entry":
                 w = mk_entry(form, var)
             elif kind == "spin":
                 w = mk_spin(form, var, opts[0], opts[1])
-            elif kind == "combo":
+            else:
                 w = ttk.Combobox(form, textvariable=var, values=opts,
-                                 width=13, state="readonly",
-                                 font=(FONT_NAME, 10))
+                                 width=13, state="readonly", font=(Font_Name, 9))
             w.grid(row=i, column=1, sticky="ew", padx=(8, 0), pady=4)
         form.columnconfigure(1, weight=1)
 
         tk.Label(form, text="Priority", bg=PANEL, fg=SUBTEXT,
-                 font=(FONT_NAME, 10)).grid(row=4, column=0, sticky="w", pady=4)
+                 font=(Font_Name, 9)).grid(row=4, column=0, sticky="w", pady=4)
         self.priority_var = tk.IntVar(value=2)
         pf = tk.Frame(form, **P)
         pf.grid(row=4, column=1, sticky="w", padx=(8, 0))
         for val, lbl, col in [(1,"Low",SUBTEXT),(2,"Med",YELLOW),(3,"High",ACCENT2)]:
             tk.Radiobutton(pf, text=lbl, variable=self.priority_var, value=val,
                            bg=PANEL, fg=col, selectcolor=CARD,
-                           activebackground=PANEL, font=(FONT_NAME, 10)
+                           activebackground=PANEL, font=(Font_Name, 9)
                            ).pack(side="left", padx=2)
 
         btn_row = tk.Frame(parent, **P)
@@ -186,10 +199,11 @@ class StudyPlannerApp:
                ).pack(side="left", fill="x", expand=True, padx=(6, 0))
 
         divider(parent)
+
         section_title(parent, "SUBJECTS ADDED")
 
         self.subject_listbox = tk.Listbox(
-            parent, bg=CARD, fg=TEXT, font=(FONT_NAME, 10),
+            parent, bg=CARD, fg=TEXT, font=(Font_Name, 9),
             selectbackground=ACCENT, height=6,
             bd=0, highlightthickness=1, highlightcolor=BORDER,
             activestyle="none"
@@ -197,14 +211,14 @@ class StudyPlannerApp:
         self.subject_listbox.pack(fill="x", padx=14)
 
         self.count_label = tk.Label(parent, text="0 subjects added",
-                                    bg=PANEL, fg=ACCENT2,
-                                    font=(FONT_NAME, 9))
+                                    bg=PANEL, fg=ACCENT2, font=(Font_Name, 8))
         self.count_label.pack(anchor="w", padx=14, pady=(2, 0))
 
         mk_btn(parent, "Remove Selected", self._remove_subject, "#3A3A55"
                ).pack(fill="x", padx=14, pady=(4, 2))
 
         divider(parent)
+
         section_title(parent, "GA SETTINGS")
 
         ga = tk.Frame(parent, bg=PANEL)
@@ -215,34 +229,34 @@ class StudyPlannerApp:
         self.break_var = tk.IntVar(value=2)
         self.mut_var   = tk.DoubleVar(value=0.1)
 
-        settings = [
-            ("Population", self.pop_var, 10, 100),
-            ("Generations", self.gen_var, 10, 200),
-            ("Break After (hrs)", self.break_var, 1, 5),
-        ]
-        for i, (lbl, var, lo, hi) in enumerate(settings):
+        for i, (lbl, var, lo, hi) in enumerate([
+            ("Population",       self.pop_var,   10, 100),
+            ("Generations",      self.gen_var,   10, 200),
+            ("Break After (hrs)",self.break_var,  1,   5),
+        ]):
             tk.Label(ga, text=lbl, bg=PANEL, fg=SUBTEXT,
-                     font=(FONT_NAME, 10)).grid(row=i, column=0, sticky="w", pady=3)
+                     font=(Font_Name, 9)).grid(row=i, column=0, sticky="w", pady=3)
             mk_spin(ga, var, lo, hi).grid(row=i, column=1, sticky="ew",
-                                           padx=(8, 0), pady=3)
+                                          padx=(8, 0), pady=3)
 
         tk.Label(ga, text="Mutation Rate", bg=PANEL, fg=SUBTEXT,
-                 font=(FONT_NAME, 10)).grid(row=3, column=0, sticky="w", pady=3)
+                 font=(Font_Name, 9)).grid(row=3, column=0, sticky="w", pady=3)
         tk.Scale(ga, variable=self.mut_var, from_=0.01, to=0.5,
                  orient="horizontal", resolution=0.01,
                  bg=PANEL, fg=TEXT, troughcolor=CARD,
-                 highlightthickness=0, font=(FONT_NAME, 9)
+                 highlightthickness=0, font=(Font_Name, 8)
                  ).grid(row=3, column=1, sticky="ew", padx=(8, 0))
         ga.columnconfigure(1, weight=1)
 
         tk.Frame(parent, bg=PANEL, height=30).pack()
 
+    # ── Output Tabs ───────────────────────────────────────────────────────────
     def _build_output_tabs(self, parent):
         nb_style = ttk.Style()
         nb_style.theme_use("default")
         nb_style.configure("TNotebook", background=BG, borderwidth=0)
         nb_style.configure("TNotebook.Tab", background=CARD, foreground=SUBTEXT,
-                           padding=[16, 7], font=(FONT_NAME, 11))
+                           padding=[16, 7], font=(Font_Name, 10))
         nb_style.map("TNotebook.Tab",
                      background=[("selected", PANEL)],
                      foreground=[("selected", ACCENT)])
@@ -266,47 +280,75 @@ class StudyPlannerApp:
         nb.add(self.tab_sum, text="  Summary  ")
         self._build_summary_tab(self.tab_sum)
 
+    # ── Schedule Tab ──────────────────────────────────────────────────────────
     def _build_schedule_tab(self, parent):
         top = tk.Frame(parent, bg=PANEL)
         top.pack(fill="x", padx=16, pady=(12, 4))
         tk.Label(top, text="Optimized Schedule", bg=PANEL, fg=TEXT,
-                 font=(FONT_NAME, 14, "bold")).pack(side="left")
+                 font=(Font_Name, 13, "bold")).pack(side="left")
         self.fitness_label = tk.Label(top, text="Fitness: —",
                                       bg=PANEL, fg=GREEN,
-                                      font=(FONT_NAME, 12, "bold"))
+                                      font=(Font_Name, 11, "bold"))
         self.fitness_label.pack(side="right")
 
         self.fig_s, self.ax_s = plt.subplots(figsize=(9, 5))
         self.fig_s.patch.set_facecolor(PANEL)
         self.canvas_s = FigureCanvasTkAgg(self.fig_s, master=parent)
         self.canvas_s.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=6)
+
+        # ── Overflow label — Tkinter widget, always updated, never stale ──
+        self.overflow_label = tk.Label(
+            parent, text="",
+            bg=PANEL, fg=YELLOW,
+            font=(Font_Name, 9, "bold"),
+            anchor="w", justify="left",
+            wraplength=800, padx=12, pady=5
+        )
+        self.overflow_label.pack(fill="x", padx=10, pady=(0, 4))
+
         self._placeholder(self.ax_s, self.canvas_s,
                           "Run GA to see your optimized schedule here")
 
-    def _draw_schedule(self, schedule):
-        ax = self.ax_s; ax.clear()
-        ax.set_facecolor(BG); self.fig_s.patch.set_facecolor(PANEL)
+    def _draw_schedule(self, schedule, overflow=None):
+        ax = self.ax_s
+        ax.clear()
+        ax.set_facecolor(BG)
+        self.fig_s.patch.set_facecolor(PANEL)
+
         unique = [s for s in dict.fromkeys(e[1] for e in schedule) if s != "Break"]
         cmap = {"Break": "#2A2A45"}
         for i, s in enumerate(unique):
             cmap[s] = SUBJECT_COLORS[i % len(SUBJECT_COLORS)]
+
         n = len(schedule)
         for i, (slot, sub) in enumerate(schedule):
             y = n - i - 1
             ax.barh(y, 1, height=0.72, color=cmap[sub], alpha=0.92,
                     edgecolor=PANEL, linewidth=1.5)
-            label = f"  Break" if sub == "Break" else f"  {sub}"
+            label = "  Break" if sub == "Break" else f"  {sub}"
             ax.text(0.025, y, f"{slot}{label}", va="center", color="white",
-                    fontsize=10, fontfamily=FONT_NAME, fontweight="bold")
-        ax.set_xlim(0, 1.02); ax.set_ylim(-0.6, n - 0.3)
+                    fontsize=9.5, fontfamily=Font_Name, fontweight="bold")
+
+        ax.set_xlim(0, 1.02)
+        ax.set_ylim(-0.6, n - 0.3)
         ax.axis("off")
         ax.set_title("Optimized Study Timetable", color=TEXT,
-                     fontfamily=FONT_NAME, fontsize=14, pad=10)
+                     fontfamily=Font_Name, fontsize=12, pad=10)
+
         patches = [mpatches.Patch(color=c, label=s) for s, c in cmap.items()]
-        ax.legend(handles=patches, fontsize=9, loc="lower right",
+        ax.legend(handles=patches, fontsize=8, loc="lower right",
                   facecolor=CARD, edgecolor=BORDER, labelcolor=TEXT)
         self.canvas_s.draw()
 
+        # ── Always reset overflow label first, then set if needed ──
+        if overflow:
+            msg = "Day full (ends 24:00). Continue next day:  " + \
+                  "  |  ".join(overflow)
+            self.overflow_label.config(text=msg, bg=CARD)
+        else:
+            self.overflow_label.config(text="", bg=PANEL)
+
+    # ── Fitness Graph Tab ─────────────────────────────────────────────────────
     def _build_graph_tab(self, parent):
         self.fig_g, self.ax_g = plt.subplots(figsize=(9, 5))
         self.fig_g.patch.set_facecolor(PANEL)
@@ -326,17 +368,18 @@ class StudyPlannerApp:
         ax.scatter([best_g], [max(history)], color=GREEN, zorder=5, s=70)
         ax.annotate(f"Best: {max(history)}", xy=(best_g, max(history)),
                     xytext=(best_g + 0.5, max(history) - 3),
-                    color=GREEN, fontsize=10, fontfamily=FONT_NAME)
-        ax.set_xlabel("Generation", color=SUBTEXT, fontfamily=FONT_NAME, fontsize=11)
-        ax.set_ylabel("Fitness Score", color=SUBTEXT, fontfamily=FONT_NAME, fontsize=11)
+                    color=GREEN, fontsize=9, fontfamily=Font_Name)
+        ax.set_xlabel("Generation", color=SUBTEXT, fontfamily=Font_Name, fontsize=10)
+        ax.set_ylabel("Fitness Score", color=SUBTEXT, fontfamily=Font_Name, fontsize=10)
         ax.set_title("GA Fitness Progression Over Generations",
-                     color=TEXT, fontfamily=FONT_NAME, fontsize=14)
-        ax.tick_params(colors=SUBTEXT, labelsize=9)
+                     color=TEXT, fontfamily=Font_Name, fontsize=12)
+        ax.tick_params(colors=SUBTEXT, labelsize=8)
         for sp in ["top", "right"]: ax.spines[sp].set_visible(False)
         for sp in ["bottom", "left"]: ax.spines[sp].set_color(BORDER)
         ax.grid(axis="y", color=BORDER, linestyle="--", alpha=0.5)
         self.canvas_g.draw()
 
+    # ── CSP Tab ───────────────────────────────────────────────────────────────
     def _build_csp_tab(self, parent):
         self.fig_c, self.ax_c = plt.subplots(figsize=(9, 5))
         self.fig_c.patch.set_facecolor(PANEL)
@@ -348,9 +391,9 @@ class StudyPlannerApp:
     def _draw_csp(self, schedule, subjects_data):
         ax = self.ax_c; ax.clear()
         ax.set_facecolor(BG); self.fig_c.patch.set_facecolor(PANEL)
-        subjects     = [s["name"] for s in subjects_data]
+        subjects      = [s["name"] for s in subjects_data]
         subject_hours = {s["name"]: s["hours"] for s in subjects_data}
-        violations   = get_violations(schedule, subject_hours, subjects)
+        violations    = get_violations(schedule, subject_hours, subjects)
         n = len(schedule)
         for i, (slot, sub) in enumerate(schedule):
             y = n - i - 1
@@ -362,25 +405,26 @@ class StudyPlannerApp:
             ax.text(0.025, y,
                     f"{slot}  {'Break' if sub == 'Break' else sub}",
                     va="center", color="white",
-                    fontsize=10, fontfamily=FONT_NAME)
+                    fontsize=9, fontfamily=Font_Name)
         valid = len(violations) == 0
         title = "All CSP Constraints Satisfied" if valid else \
                 f"{len(violations)} Violation(s) Found"
         ax.set_title(title, color=GREEN if valid else ACCENT2,
-                     fontfamily=FONT_NAME, fontsize=14, pad=8)
+                     fontfamily=Font_Name, fontsize=12, pad=8)
         if violations:
             ax.text(0.01, -0.08, "\n".join(violations),
                     transform=ax.transAxes, color=ACCENT2,
-                    fontsize=9, fontfamily=FONT_NAME, va="top")
+                    fontsize=8, fontfamily=Font_Name, va="top")
         ax.set_xlim(0, 1.02); ax.set_ylim(-0.6, n - 0.3)
         ax.axis("off")
         legend = [mpatches.Patch(color=GREEN, label="Break"),
                   mpatches.Patch(color=ACCENT, label="Valid Slot"),
                   mpatches.Patch(color=ACCENT2, label="Violation")]
-        ax.legend(handles=legend, fontsize=9, loc="lower right",
+        ax.legend(handles=legend, fontsize=8, loc="lower right",
                   facecolor=CARD, edgecolor=BORDER, labelcolor=TEXT)
         self.canvas_c.draw()
 
+    # ── Summary Tab ───────────────────────────────────────────────────────────
     def _build_summary_tab(self, parent):
         self.fig_sum, self.axes_sum = plt.subplots(1, 2, figsize=(9, 5))
         self.fig_sum.patch.set_facecolor(PANEL)
@@ -404,36 +448,38 @@ class StudyPlannerApp:
         ax1.bar(x - w/2, alloc, w, label="Allocated", color=ACCENT, alpha=0.75)
         ax1.bar(x + w/2, sched, w, label="Scheduled", color=GREEN, alpha=0.9)
         ax1.set_xticks(x)
-        ax1.set_xticklabels(names, color=SUBTEXT, fontsize=9,
-                            rotation=20, fontfamily=FONT_NAME)
-        ax1.set_ylabel("Hours", color=SUBTEXT, fontfamily=FONT_NAME)
+        ax1.set_xticklabels(names, color=SUBTEXT, fontsize=8,
+                            rotation=20, fontfamily=Font_Name)
+        ax1.set_ylabel("Hours", color=SUBTEXT, fontfamily=Font_Name)
         ax1.set_title("Hours Allocated vs Scheduled",
-                      color=TEXT, fontfamily=FONT_NAME, fontsize=12)
-        ax1.tick_params(colors=SUBTEXT, labelsize=9)
+                      color=TEXT, fontfamily=Font_Name, fontsize=10)
+        ax1.tick_params(colors=SUBTEXT, labelsize=8)
         ax1.set_facecolor(BG)
-        ax1.legend(fontsize=9, facecolor=CARD, edgecolor=BORDER, labelcolor=TEXT)
+        ax1.legend(fontsize=8, facecolor=CARD, edgecolor=BORDER, labelcolor=TEXT)
         for sp in ["top", "right"]: ax1.spines[sp].set_visible(False)
         for sp in ["bottom", "left"]: ax1.spines[sp].set_color(BORDER)
         ax1.grid(axis="y", color=BORDER, linestyle="--", alpha=0.4)
         if sum(sched) > 0:
             ax2.pie(sched, labels=names, colors=colors, autopct="%1.1f%%",
-                    textprops={"color": TEXT, "fontsize": 9, "fontfamily": FONT_NAME},
+                    textprops={"color": TEXT, "fontsize": 8, "fontfamily": Font_Name},
                     wedgeprops={"edgecolor": PANEL, "linewidth": 1.5})
         ax2.set_facecolor(BG)
         ax2.set_title("Schedule Distribution",
-                      color=TEXT, fontfamily=FONT_NAME, fontsize=12)
+                      color=TEXT, fontfamily=Font_Name, fontsize=10)
         self.fig_sum.tight_layout(pad=2)
         self.canvas_sum.draw()
 
+    # ── Helpers ───────────────────────────────────────────────────────────────
     def _placeholder(self, ax, canvas, msg):
         ax.clear(); ax.set_facecolor(BG)
         ax.text(0.5, 0.5, msg, ha="center", va="center",
-                color=SUBTEXT, fontsize=12, fontfamily=FONT_NAME,
+                color=SUBTEXT, fontsize=11, fontfamily=Font_Name,
                 transform=ax.transAxes)
         ax.axis("off")
         if canvas:
             canvas.draw()
 
+    # ── Subject management ────────────────────────────────────────────────────
     def _add_subject(self):
         name = self.name_var.get().strip()
         if not name:
@@ -443,11 +489,11 @@ class StudyPlannerApp:
             messagebox.showwarning("Duplicate", f"'{name}' is already added.")
             return
         s = {
-            "name":      name,
-            "hours":     self.hours_var.get(),
-            "priority":  self.priority_var.get(),
-            "difficulty":self.diff_var.get(),
-            "preferred": self.pref_var.get(),
+            "name":       name,
+            "hours":      self.hours_var.get(),
+            "priority":   self.priority_var.get(),
+            "difficulty": self.diff_var.get(),
+            "preferred":  self.pref_var.get(),
         }
         self.subjects_data.append(s)
         self.subject_listbox.insert(
@@ -458,12 +504,13 @@ class StudyPlannerApp:
         self.name_var.set("")
         self._update_count()
         self.status_var.set(
-            f"{len(self.subjects_data)} subject(s) — click GENERATE"
+            f"{len(self.subjects_data)} subject(s) — scroll down & click GENERATE"
         )
 
     def _remove_subject(self):
         sel = self.subject_listbox.curselection()
-        if not sel: return
+        if not sel:
+            return
         idx = sel[0]
         self.subject_listbox.delete(idx)
         self.subjects_data.pop(idx)
@@ -486,12 +533,17 @@ class StudyPlannerApp:
             fg=GREEN if n >= 2 else SUBTEXT
         )
 
+    # ── GA Runner ─────────────────────────────────────────────────────────────
     def _run_ga(self):
         if len(self.subjects_data) < 2:
-            messagebox.showwarning("Not Enough Subjects", "Add 2+ subjects.")
+            messagebox.showwarning(
+                "Not Enough Subjects",
+                "Please add at least 2 subjects before generating a schedule."
+            )
             return
 
-        self.run_btn.config(state="disabled", text="  Running GA...  ", bg=SUBTEXT)
+        self.run_btn.config(state="disabled",
+                            text="  Running GA...  ", bg=SUBTEXT)
         self.status_var.set("Running Genetic Algorithm...")
         self.progress_var.set(0)
 
@@ -502,37 +554,53 @@ class StudyPlannerApp:
 
             def on_progress(gen, fit):
                 self.progress_var.set((gen / gens) * 100)
-                self.status_var.set(f"Gen {gen}/{gens} | Best Fitness: {fit}")
+                self.status_var.set(
+                    f"Generation {gen}/{gens}  |  Best Fitness: {fit}"
+                )
 
-            sched, fitness, history = run_ga(
-                subjects_data    = self.subjects_data,
-                preferred_times  = preferred,
-                total_hours      = total,
-                break_interval   = self.break_var.get(),
-                population_size  = self.pop_var.get(),
-                generations      = gens,
+            sched, fitness, history, overflow = run_ga(
+                subjects_data      = self.subjects_data,
+                preferred_times    = preferred,
+                total_hours        = total,
+                break_interval     = self.break_var.get(),
+                population_size    = self.pop_var.get(),
+                generations        = gens,
                 base_mutation_rate = self.mut_var.get(),
                 progress_callback  = on_progress,
             )
-            self.root.after(0, lambda: self._on_done(sched, fitness, history))
+            # Bind values into lambda NOW so second run never uses stale data
+            self.root.after(
+                0,
+                lambda s=sched, f=fitness, h=history, o=overflow:
+                    self._on_done(s, f, h, o)
+            )
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def _on_done(self, schedule, fitness, history):
+    def _on_done(self, schedule, fitness, history, overflow):
         self.best_schedule   = schedule
         self.fitness_history = history
+
         self.fitness_label.config(text=f"Fitness: {fitness}")
-        self.status_var.set(f"Done! | Fitness: {fitness}")
+        slots_msg = f"Done!  Best Fitness: {fitness}  |  {len(schedule)} time slots"
+        if overflow:
+            slots_msg += "  |  Day full — see overflow below schedule"
+        self.status_var.set(slots_msg)
         self.progress_var.set(100)
-        self.run_btn.config(state="normal", text="  GENERATE SCHEDULE  ", bg=GREEN)
-        self._draw_schedule(schedule)
+        self.run_btn.config(state="normal",
+                            text="  GENERATE SCHEDULE  ", bg=GREEN)
+
+        self._draw_schedule(schedule, overflow)
         self._draw_fitness(history)
         self._draw_csp(schedule, self.subjects_data)
         self._draw_summary(schedule, self.subjects_data)
 
+
+# ─── Widget helpers ───────────────────────────────────────────────────────────
+
 def section_title(parent, text):
     tk.Label(parent, text=text, bg=PANEL, fg=ACCENT,
-             font=(FONT_NAME, 11, "bold")).pack(anchor="w", padx=14, pady=(12, 2))
+             font=(Font_Name, 10, "bold")).pack(anchor="w", padx=14, pady=(12, 2))
 
 def divider(parent):
     tk.Frame(parent, bg=BORDER, height=1).pack(fill="x", padx=14, pady=6)
@@ -540,31 +608,40 @@ def divider(parent):
 def mk_entry(parent, var):
     return tk.Entry(parent, textvariable=var, bg=CARD, fg=TEXT,
                     insertbackground=TEXT, relief="flat",
-                    font=(FONT_NAME, 11), bd=4)
+                    font=(Font_Name, 10), bd=4)
 
 def mk_spin(parent, var, lo, hi):
     return tk.Spinbox(parent, textvariable=var, from_=lo, to=hi,
                       bg=CARD, fg=TEXT, buttonbackground=CARD,
-                      relief="flat", font=(FONT_NAME, 11), width=8)
+                      relief="flat", font=(Font_Name, 10), width=8)
 
 def mk_btn(parent, text, cmd, color):
     return tk.Button(parent, text=text, command=cmd,
-                      bg=color, fg=TEXT, activebackground=color,
-                      relief="flat", font=(FONT_NAME, 10, "bold"),
-                      cursor="hand2", pady=6, bd=0)
+                     bg=color, fg=TEXT, activebackground=color,
+                     relief="flat", font=(Font_Name, 9, "bold"),
+                     cursor="hand2", pady=6, bd=0)
 
-root = tk.Tk()
-app = StudyPlannerApp(root)
-demo = [
-    {"name": "AI",       "hours": 2, "priority": 3, "difficulty": 5, "preferred": "Morning"},
-    {"name": "OS",       "hours": 2, "priority": 2, "difficulty": 3, "preferred": "Morning"},
-    {"name": "Database", "hours": 2, "priority": 2, "difficulty": 4, "preferred": "Evening"},
-    {"name": "Networks", "hours": 1, "priority": 1, "difficulty": 2, "preferred": "Evening"},
-    {"name": "Math",     "hours": 1, "priority": 3, "difficulty": 4, "preferred": "Morning"},
-]
-for s in demo:
-    app.subjects_data.append(s)
-    app.subject_listbox.insert("end", f"  {s['name']}  [{s['hours']}h | Med | D:{s['difficulty']} | {s['preferred']}]")
-app._update_count()
-app.status_var.set("5 demo subjects loaded — click GENERATE!")
-root.mainloop()
+
+# ─── Entry Point ─────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = StudyPlannerApp(root)
+
+    demo = [
+        {"name": "AI",       "hours": 2, "priority": 3, "difficulty": 5, "preferred": "Morning"},
+        {"name": "OS",       "hours": 2, "priority": 2, "difficulty": 3, "preferred": "Morning"},
+        {"name": "Database", "hours": 2, "priority": 2, "difficulty": 4, "preferred": "Evening"},
+        {"name": "Networks", "hours": 1, "priority": 1, "difficulty": 2, "preferred": "Evening"},
+        {"name": "Math",     "hours": 1, "priority": 3, "difficulty": 4, "preferred": "Morning"},
+    ]
+    for s in demo:
+        app.subjects_data.append(s)
+        app.subject_listbox.insert(
+            "end",
+            f"  {s['name']}  [{s['hours']}h | {priority_label(s['priority'])} | "
+            f"D:{s['difficulty']} | {s['preferred']}]"
+        )
+    app._update_count()
+    app.status_var.set("5 demo subjects loaded — click GENERATE SCHEDULE to run!")
+
+    root.mainloop()
