@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from 'react'
 import { createSchedule, pollJob } from './api.js'
 import SubjectForm from './components/SubjectForm.jsx'
-import ScheduleTab from './components/ScheduleTab.jsx'
-import FitnessTab from './components/FitnessTab.jsx'
-import CspTab from './components/CspTab.jsx'
-import SummaryTab from './components/SummaryTab.jsx'
+import ScheduleCard from './components/ScheduleCard.jsx'
+import FitnessCard from './components/FitnessCard.jsx'
+import CspCard from './components/CspCard.jsx'
+import SummaryCard from './components/SummaryCard.jsx'
+import StatusPill from './components/StatusPill.jsx'
+import ErrorBanner from './components/ErrorBanner.jsx'
 
 const DEMO_SUBJECTS = [
   { name: 'AI', hours: 2, priority: 3, difficulty: 5, preferred: 'Morning' },
@@ -22,10 +24,11 @@ export default function App() {
     break_interval: 2,
     mutation_rate: 0.1,
   })
-  const [activeTab, setActiveTab] = useState('schedule')
   const [result, setResult] = useState(null)
   const [progress, setProgress] = useState(null)
-  const [status, setStatus] = useState('Ready')
+  const [status, setStatus] = useState('idle')
+  const [statusMessage, setStatusMessage] = useState('Ready')
+  const [error, setError] = useState(null)
   const [isRunning, setIsRunning] = useState(false)
 
   const handleGenerate = useCallback(async () => {
@@ -36,18 +39,23 @@ export default function App() {
     setIsRunning(true)
     setResult(null)
     setProgress(null)
-    setStatus('Starting...')
+    setError(null)
+    setStatus('running')
+    setStatusMessage('Starting...')
     try {
       const payload = { subjects, ...gaSettings }
       const { job_id } = await createSchedule(payload)
       const res = await pollJob(job_id, (p) => {
         setProgress(p)
-        setStatus(`Generation ${p.gen}/${p.generations} | Best: ${p.best_fitness}`)
+        setStatusMessage(`Generation ${p.gen}/${p.generations} · Best: ${p.best_fitness}`)
       })
       setResult(res)
-      setStatus(`Done! Fitness: ${res.fitness} | ${res.schedule.length} slots`)
+      setStatus('done')
+      setStatusMessage(`Done · Fitness ${res.fitness} · ${res.schedule.length} slots`)
     } catch (err) {
-      setStatus(`Error: ${err.message}`)
+      setStatus('error')
+      setError(err.message)
+      setStatusMessage('Failed')
     } finally {
       setIsRunning(false)
     }
@@ -56,8 +64,6 @@ export default function App() {
   return (
     <div className="app">
       <aside className="sidebar">
-        <h2>AI Smart Study Planner</h2>
-        <p className="subtitle">Genetic Algorithm x Constraint Satisfaction</p>
         <SubjectForm
           subjects={subjects}
           setSubjects={setSubjects}
@@ -66,31 +72,21 @@ export default function App() {
           onGenerate={handleGenerate}
           isRunning={isRunning}
           progress={progress}
-          status={status}
+          status={statusMessage}
         />
       </aside>
       <main className="main">
         <div className="header">
-          <h1>Optimized Schedule</h1>
-          <span className="status">{status}</span>
-        </div>
-        <div className="tabs">
-          {['schedule', 'fitness', 'csp', 'summary'].map((t) => (
-            <button
-              key={t}
-              className={`tab ${activeTab === t ? 'active' : ''}`}
-              onClick={() => setActiveTab(t)}
-            >
-              {t === 'schedule' ? 'Schedule' : t === 'fitness' ? 'Fitness Graph' : t === 'csp' ? 'CSP Visualizer' : 'Summary'}
-            </button>
-          ))}
+          <span className="header-title">Your Study Plan</span>
+          <StatusPill status={status} />
         </div>
         <div className="content">
-          <div className="tab-content">
-            {activeTab === 'schedule' && <ScheduleTab result={result} />}
-            {activeTab === 'fitness' && <FitnessTab result={result} />}
-            {activeTab === 'csp' && <CspTab result={result} />}
-            {activeTab === 'summary' && <SummaryTab result={result} />}
+          <ErrorBanner message={error} onDismiss={() => setError(null)} />
+          <div className="dashboard">
+            <ScheduleCard result={result} subjects={subjects} />
+            <FitnessCard result={result} />
+            <CspCard result={result} />
+            <SummaryCard result={result} />
           </div>
         </div>
       </main>
