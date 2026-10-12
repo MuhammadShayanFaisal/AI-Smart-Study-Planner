@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { createSchedule, pollJob } from './api.js'
 import SubjectForm from './components/SubjectForm.jsx'
 import ScheduleCard from './components/ScheduleCard.jsx'
@@ -17,6 +17,13 @@ const DEMO_SUBJECTS = [
 ]
 
 export default function App() {
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light')
+    localStorage.setItem('theme', darkMode ? 'dark' : 'light')
+  }, [darkMode])
+
   const [subjects, setSubjects] = useState(DEMO_SUBJECTS)
   const [gaSettings, setGaSettings] = useState({
     population_size: 30,
@@ -78,7 +85,25 @@ export default function App() {
       <main className="main">
         <div className="header">
           <span className="header-title">Your Study Plan</span>
-          <StatusPill status={status} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              className="theme-toggle"
+              onClick={() => setDarkMode(!darkMode)}
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {darkMode ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </button>
+            <StatusPill status={status} />
+          </div>
         </div>
         <div className="content">
           <ErrorBanner message={error} onDismiss={() => setError(null)} />
